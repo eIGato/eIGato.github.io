@@ -1,10 +1,10 @@
 const Stage = {
     Greeting: 0,
     Shuffle5: 1,
-    FishOrRollback: 3,
-    Shuffle6: 4,
-    Repeat: 6,
-    GameOver: 7,
+    FishOrRollback: 2,
+    Shuffle6: 3,
+    Repeat: 4,
+    GameOver: 5,
 }
 const settings = {
     cardPositions: {
@@ -55,13 +55,13 @@ const settings = {
         hand: [
             {
                 x: 920,
-                y: 840,
+                y: 900,
                 angle: 0,
                 scale: 0.7,
             },
             {
                 x: 600,
-                y: 840,
+                y: 900,
                 angle: 0,
                 scale: 0.7,
             },
@@ -88,11 +88,17 @@ const settings = {
     },
     text: {
         buttons: {
-            x1: 270,
-            x2: 810,
-            y: 810,
+            contents: [
+                "\n  Fish!  \n",
+                "\nRollback!\n",
+            ],
+            xes: [
+                270,
+                810,
+            ],
+            y: 540,
             style: {
-                fontFamily: "Arial",
+                fontFamily: "Courier",
                 fontSize: "72px",
                 fontStyle: "bold",
                 color: "black",
@@ -112,8 +118,42 @@ const settings = {
                 wordWrap: {width: 880},
             },
         },
+        scoreDisplay: {
+            x: 1080,
+            y: 0,
+            style: {
+                fontFamily: "Courier",
+                fontSize: "48px",
+                fontStyle: "bold",
+                color: "black",
+                backgroundColor: "#aaaaaa44",
+                align: "right",
+            },
+        },
     },
 };
+const phrasesMixing = [
+    "mixing cards",
+];
+const phrasesShuffle6 = {
+    fish: [
+        "Fish",
+        "fishing",
+    ],
+    rollback: [
+        "Rollback",
+        "rolling",
+    ],
+};
+const cardRanks = [
+    "wolf's tail",
+    "buxom red",
+    "chubby nine",
+    "stoneroller",
+    "hungry gutter",
+    "arrow in the neck",
+    "plank",
+];
 
 let game;
 
@@ -143,7 +183,14 @@ class playGame extends Phaser.Scene {
         super("PlayGame");
         this.stage = Stage.Greeting;
         this.inputAllowed = false;
-        this.cardsToChoose = [];
+        this.cardsInGame = {
+            deck: [],
+            hand: [],
+            stash: [],
+        };
+        this.firstCardRank = 0;
+        this.buttons = [];
+        this.score = 500;
         console.debug("Constructed game");
     }
 
@@ -162,11 +209,6 @@ class playGame extends Phaser.Scene {
             "background",
         );
         this.background.setDepth(-127);
-        this.cardsInGame = {
-            deck: [],
-            hand: [],
-            stash: [],
-        };
         for (let depth = 10; depth < 17; depth++) {
             let card = this.add.sprite(
                 settings.cardPositions.deckDefault.x,
@@ -176,6 +218,7 @@ class playGame extends Phaser.Scene {
             );
             card.setScale(settings.cardPositions.deckDefault.scale);
             card.setDepth(depth);
+            card.setInteractive(this.input.makePixelPerfect());
             this.cardsInGame.deck.push(card);
         }
         this.speechBubble = this.add.text(
@@ -185,6 +228,14 @@ class playGame extends Phaser.Scene {
             settings.text.speechBubble.style,
         );
         this.speechBubble.setDepth(30);
+        this.scoreDisplay = this.add.text(
+            settings.text.scoreDisplay.x,
+            settings.text.scoreDisplay.y,
+            this.score.toString() + "c.",
+            settings.text.scoreDisplay.style,
+        );
+        this.scoreDisplay.setDepth(100);
+        this.scoreDisplay.setOrigin(1, 0);
         this.playStage();
         this.input.on("pointerup", this.handleInput, this);
         console.debug("Created game field");
@@ -193,6 +244,7 @@ class playGame extends Phaser.Scene {
     playStage() {
         console.debug("Playing stage " + this.stage.toString());
         this.inputAllowed = false;
+        this.resetSpeechBubble();
         switch (this.stage) {
             case Stage.Greeting:
                 this.playGreeting();
@@ -226,41 +278,46 @@ class playGame extends Phaser.Scene {
         }
         this.inputAllowed = false;
         let clickedObject = currentlyOver[currentlyOver.length - 1]
+        let indexInDeck = -1;
         switch (this.stage) {
             case Stage.Greeting:
             case Stage.Repeat:
                 this.stage = Stage.Shuffle5;
                 break;
             case Stage.Shuffle5:
-                if (!this.cardsToChoose.includes(clickedObject)) {
+                if (!this.cardsInGame.deck.includes(clickedObject)) {
+                    console.debug("Clicked not on a card");
                     this.inputAllowed = true;
                     return;
                 }
-                this.animateAddToHand(clickedObject);
-                this.animateRevealCard();
+                indexInDeck = this.cardsInGame.deck.indexOf(clickedObject);
+                this.cardsInGame.deck.splice(indexInDeck, 1);
+                this.cardsInGame.hand.push(clickedObject);
                 this.stage = Stage.FishOrRollback;
                 break;
             case Stage.FishOrRollback:
                 if (!this.buttons.includes(clickedObject)) {
+                    console.debug("Clicked not on a button");
                     this.inputAllowed = true;
                     return;
                 }
-                this.playersChoice = clickedObject.text == "Fish" ? 1 : -1;
+                this.playersChoice = (
+                    clickedObject.text == settings.text.buttons.contents[0]
+                    ? 1
+                    : -1
+                );
                 this.stage = Stage.Shuffle6;
                 break;
             case Stage.Shuffle6:
-                if (!this.cardsToChoose.includes(clickedObject)) {
+                if (!this.cardsInGame.deck.includes(clickedObject)) {
+                    console.debug("Clicked not on a card");
                     this.inputAllowed = true;
                     return;
                 }
-                this.animateAddToHand(clickedObject);
-                this.defineGameResult();
-                if (this.score > 0) {
-                    this.stage = Stage.Repeat;
-                }
-                else {
-                    this.stage = Stage.GameOver;
-                }
+                indexInDeck = this.cardsInGame.deck.indexOf(clickedObject);
+                this.cardsInGame.deck.splice(indexInDeck, 1);
+                this.cardsInGame.hand.push(clickedObject);
+                this.stage = Stage.Repeat;
                 break;
             case Stage.GameOver:
                 break;
@@ -277,13 +334,15 @@ class playGame extends Phaser.Scene {
 
     playGreeting() {
         this.typewrite(
-            "Hello, drifter! Wanna play catcrawlers?\n[tap to bid 100c.]",
-            () => {this.inputAllowed = true;},
+            "Hello, drifter! Wanna play catcrawlers?\n[tap to bet 100c.]"
         );
+        this.inputAllowed = true;
     }
 
     playShuffle5() {
         this.speechBubble.text = "";
+        this.score -= 100;
+        this.updateScoreDisplay();
         let timeline = this.tweens.chain({
             onComplete: () => {this.inputAllowed = true;},
             ease: "Cubic.easeOut",
@@ -315,9 +374,8 @@ class playGame extends Phaser.Scene {
                 ...settings.cardPositions.stash[i],
             });
         }
-        // FIXME: Add separate positions.
         timeline.add({
-            targets: [...this.cardsInGame.deck],
+            targets: this.cardsInGame.deck[0],
             x: settings.resolution * Math.random(),
             y: settings.resolution * Math.random(),
             duration: 500,
@@ -325,6 +383,14 @@ class playGame extends Phaser.Scene {
                 for (let i = 0; i < 5; i++) {
                     this.cardsInGame.deck[i].setDepth(i + 10);
                 }
+                this.cardsInGame.deck.slice(1).forEach((card) => {
+                    this.tweens.add({
+                        targets: card,
+                        x: settings.resolution * Math.random(),
+                        y: settings.resolution * Math.random(),
+                        duration: 500,
+                    });
+                });
             },
         });
         timeline.add({
@@ -352,32 +418,215 @@ class playGame extends Phaser.Scene {
             ...settings.cardPositions.deckUnfolded[0],
         });
         timeline.play();
+        this.typewrite(
+            "Now we are "
+            + phrasesMixing[Math.floor(Math.random() * phrasesMixing.length)]
+            + " and "
+            + phrasesMixing[Math.floor(Math.random() * phrasesMixing.length)]
+            + "! Now pick a card!"
+        );
     }
 
     playFishOrRollback() {
-        deck = Phaser.Utils.Array.NumberArray(0, 6);
+        this.speechBubble.text = "";
+        this.firstCardRank = Math.floor(Math.random() * 5) + 1;
+        let firstCardText = cardRanks[this.firstCardRank];
         this.tweens.add({
-            targets: cardsInGame[0],
-            x: game.config.width / 2,
+            targets: this.cardsInGame.hand[0],
             duration: 500,
+            onComplete: () => {
+                this.cardsInGame.hand[0].setFrame(this.firstCardRank);
+                this.cardsInGame.hand[0].setDepth(50);
+                for (let i = 0; i < 2; i++) {
+                    let button = this.add.text(
+                        settings.text.buttons.xes[i],
+                        settings.text.buttons.y,
+                        settings.text.buttons.contents[i],
+                        settings.text.buttons.style,
+                    )
+                    this.buttons.push(button);
+                    button.setDepth(120);
+                    button.setOrigin(0.5);
+                    button.setInteractive();
+                }
+                this.inputAllowed = true;
+            },
             ease: "Cubic.easeOut",
+            ...settings.cardPositions.hand[0],
         });
+        this.typewrite(
+            "It is the "
+            + firstCardText
+            + "! Do you fish with the "
+            + firstCardText
+            + " or rollback?"
+        );
     }
 
-    typewrite(text, onComplete = () => {}) {
+    playShuffle6() {
+        this.speechBubble.text = "";
+        this.buttons.forEach((button) => {button.destroy();});
+        this.buttons.splice(2);
+        let timeline = this.tweens.chain({
+            onComplete: () => {this.inputAllowed = true;},
+            ease: "Cubic.easeOut",
+            paused: true,
+            tweens: [{
+                targets: [...this.cardsInGame.deck],
+                duration: 500,
+                ...settings.cardPositions.deckDefault,
+            }],
+        });
+        while (this.cardsInGame.stash.length > 0) {
+            let card = this.cardsInGame.stash.pop();
+            this.cardsInGame.deck.push(card);
+            timeline.add({
+                targets: card,
+                duration: 500,
+                onStart: () => {card.setFrame(7);},
+                ...settings.cardPositions.deckDefault,
+            });
+        }
+        timeline.add({
+            targets: this.cardsInGame.deck[0],
+            x: settings.resolution * Math.random(),
+            y: settings.resolution * Math.random(),
+            duration: 500,
+            onStart: () => {
+                for (let i = 0; i < 6; i++) {
+                    this.cardsInGame.deck[i].setDepth(i + 10);
+                }
+                this.cardsInGame.deck.slice(1).forEach((card) => {
+                    this.tweens.add({
+                        targets: card,
+                        x: settings.resolution * Math.random(),
+                        y: settings.resolution * Math.random(),
+                        duration: 500,
+                    });
+                });
+            },
+        });
+        timeline.add({
+            targets: [...this.cardsInGame.deck],
+            duration: 500,
+            onStart: () => {
+                for (let i = 0; i < 6; i++) {
+                    this.cardsInGame.deck[i].setDepth(15 - i);
+                }
+            },
+            ...settings.cardPositions.deckDefault,
+        });
+        timeline.add({
+            targets: this.cardsInGame.deck[0],
+            duration: 500,
+            onStart: () => {
+                for (let i = 1; i < 6; i++) {
+                    this.tweens.add({
+                        targets: this.cardsInGame.deck[i],
+                        duration: 500,
+                        ...settings.cardPositions.deckUnfolded[i],
+                    });
+                }
+            },
+            ...settings.cardPositions.deckUnfolded[0],
+        });
+        timeline.play();
+        let phrases = (
+            this.playersChoice == 1
+            ? phrasesShuffle6.fish
+            : phrasesShuffle6.rollback
+        );
+        this.typewrite(
+            phrases[0]
+            + " it is! Now we are "
+            + phrasesMixing[Math.floor(Math.random() * phrasesMixing.length)]
+            + ", "
+            + phrasesMixing[Math.floor(Math.random() * phrasesMixing.length)]
+            + ", "
+            + phrases[1]
+            + ", "
+            + phrases[1]
+            + "... Now pick a card!"
+        );
+    }
+
+    playRepeat() {
+        this.speechBubble.text = "";
+        // TODO: Make the dealer cheat.
+        let secondCardRank = Math.floor(Math.random() * 6);
+        if (secondCardRank >= this.firstCardRank) {
+            secondCardRank++;
+        }
+        let secondCardText = cardRanks[secondCardRank];
+        let winAmount = 0;
+        let winText = "dry out.";
+        let playAgainText = "Wanna play again?\n[Tap to bet 100c.]";
+        if (
+            secondCardRank - this.firstCardRank == this.playersChoice
+            && (secondCardRank - 3) ** 2 == 9
+        ) {
+            winAmount = 600;
+            winText = "get a full six!";
+        }
+        else if (
+            (secondCardRank - this.firstCardRank) * this.playersChoice > 0
+        ) {
+            winAmount = 200;
+            winText = "lick it!";
+        }
+        this.score += winAmount;
+        if (this.score < 100) {
+            playAgainText = "Sorry, you lost all your cats. Next player!";
+            this.stage = Stage.GameOver;
+        }
+        this.tweens.add({
+            targets: this.cardsInGame.hand[1],
+            duration: 500,
+            onComplete: () => {
+                this.cardsInGame.hand[1].setFrame(secondCardRank);
+                this.cardsInGame.hand[1].setDepth(50);
+                this.updateScoreDisplay();
+                this.inputAllowed = true;
+            },
+            ease: "Cubic.easeOut",
+            ...settings.cardPositions.hand[1],
+        });
+        this.typewrite(
+            "It is the "
+            + secondCardText
+            + "! You "
+            + winText
+            + " "
+            + playAgainText
+        );
+    }
+
+    playGameOver() {
+        this.speechBubble.text = "";
+        this.typewrite("Next player!");
+        this.inputAllowed = true;
+    }
+
+    updateScoreDisplay() {
+        this.scoreDisplay.text = this.score.toString() + "c.";
+    }
+
+    resetSpeechBubble() {
+        this.time.removeAllEvents();
+        this.speechBubble.text = "";
+    }
+
+    typewrite(text) {
         const length = text.length;
         let i = 0;
         this.time.addEvent({
             callback: () => {
                 this.speechBubble.text += text[i];
                 ++i;
-                if (i == length) {
-                    onComplete();
-                }
             },
             callbackScope: this,
             repeat: length - 1,
-            delay: 100,
+            delay: 50,
         });
     }
 }
