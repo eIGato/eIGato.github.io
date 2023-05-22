@@ -7,6 +7,11 @@ const Stage = {
     GameOver: 5,
 }
 const settings = {
+    chances: {
+        lose: 10,
+        win: 7,
+        jackpot: 5,
+    },
     cardPositions: {
         deckDefault: {
             x: 540,
@@ -548,12 +553,11 @@ class playGame extends Phaser.Scene {
     }
 
     playRepeat() {
-        // TODO: Make the dealer cheat.
-        let secondCardRank = Math.floor(Math.random() * 6);
-        if (secondCardRank >= this.firstCardRank) {
-            secondCardRank++;
-        }
-        let secondCardText = cardRanks[secondCardRank];
+        const secondCardRank = getSecondCardRank(
+            this.firstCardRank,
+            this.playersChoice,
+        );
+        const secondCardText = cardRanks[secondCardRank];
         let winAmount = 0;
         let winText = "dry out.";
         let playAgainText = "Wanna play again?\n[Tap to bet 100c.]";
@@ -624,4 +628,47 @@ class playGame extends Phaser.Scene {
             delay: 50,
         });
     }
+}
+
+
+function getSecondCardRank(firstCardRank, playersChoice) {
+    const chances = settings.chances;
+    let sectors = [];
+    let totalChance = 0;
+    let chance = 0;
+    if (firstCardRank - 2 * playersChoice == 3) {
+        // Player tries to win the jackpot.
+        if (playersChoice == -1) {
+            sectors.push(chances.jackpot);
+            totalChance += chances.jackpot;
+        }
+        for (let i = 0; i < 5; i++) {
+            sectors.push(chances.lose);
+            totalChance += chances.lose;
+        }
+        if (playersChoice == 1) {
+            sectors.push(chances.jackpot);
+            totalChance += chances.jackpot;
+        }
+    }
+    else {
+        chance = playersChoice == -1 ? chances.win : chances.lose;
+        for (let i = 0; i < firstCardRank; i++) {
+            sectors.push(chance);
+            totalChance += chance;
+        }
+        chance = chances.win + chances.lose - chance;
+        for (let i = firstCardRank; i < 6; i++) {
+            sectors.push(chance);
+            totalChance += chance;
+        }
+    }
+    chance = Math.random() * totalChance;
+    for (let rank = 0; rank < 6; rank++) {
+        chance -= sectors[rank];
+        if (chance < 0) {
+            return rank + (rank >= firstCardRank);
+        }
+    }
+    return 6;
 }
