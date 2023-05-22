@@ -340,7 +340,6 @@ class playGame extends Phaser.Scene {
     }
 
     playShuffle5() {
-        this.speechBubble.text = "";
         this.score -= 100;
         this.updateScoreDisplay();
         let timeline = this.tweens.chain({
@@ -428,7 +427,6 @@ class playGame extends Phaser.Scene {
     }
 
     playFishOrRollback() {
-        this.speechBubble.text = "";
         this.firstCardRank = Math.floor(Math.random() * 5) + 1;
         let firstCardText = cardRanks[this.firstCardRank];
         this.tweens.add({
@@ -464,7 +462,6 @@ class playGame extends Phaser.Scene {
     }
 
     playShuffle6() {
-        this.speechBubble.text = "";
         this.buttons.forEach((button) => {button.destroy();});
         this.buttons.splice(2);
         let timeline = this.tweens.chain({
@@ -551,7 +548,6 @@ class playGame extends Phaser.Scene {
     }
 
     playRepeat() {
-        this.speechBubble.text = "";
         // TODO: Make the dealer cheat.
         let secondCardRank = Math.floor(Math.random() * 6);
         if (secondCardRank >= this.firstCardRank) {
@@ -602,7 +598,6 @@ class playGame extends Phaser.Scene {
     }
 
     playGameOver() {
-        this.speechBubble.text = "";
         this.typewrite("Next player!");
         this.inputAllowed = true;
     }
