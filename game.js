@@ -463,8 +463,8 @@ class playGame extends Phaser.Scene {
             ...settings.cardPositions.hand[0],
         });
         this.typewrite(
-            "And we got a "
-            + firstCardText
+            "And we got "
+            + aOrAn(firstCardText)
             + "! Fishing with the "
             + firstCardText
             + " or rolling back, traveller?"
@@ -622,10 +622,10 @@ class playGame extends Phaser.Scene {
             ...settings.cardPositions.hand[1],
         });
         this.typewrite(
-            "And it's a "
-            + winText
-            + " with a "
-            + secondCardText
+            "And it's "
+            + aOrAn(winText)
+            + " with "
+            + aOrAn(secondCardText)
             + playAgainText
         );
     }
@@ -703,4 +703,12 @@ function getSecondCardRank(firstCardRank, playersChoice) {
         }
     }
     return 6;
+}
+
+
+function aOrAn(text) {
+    if (["a", "e", "i", "o", "u"].includes(text[0])) {
+        return "an " + text;
+    }
+    return "a " + text;
 }
