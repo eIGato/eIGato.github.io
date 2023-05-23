@@ -138,18 +138,22 @@ const settings = {
     },
 };
 const phrasesMixing = [
-    "mixing cards",
+    "churning the bolts",
+    "pulling out the big boys",
+    "charging the wedgers",
+    "tugging on the digits",
+    "forking the loaves",
+    "weeping the garru",
+    "flashing the bug eyes",
+    "slackening the whiskers",
+    "punching the bird",
+    "holding the knockers",
+    "tickling the wheat",
+    "pinching the cotton",
+    "freshening up the old man",
+    "exposing the girls",
+    "shooting off the turret",
 ];
-const phrasesShuffle6 = {
-    fish: [
-        "Fish",
-        "fishing",
-    ],
-    rollback: [
-        "Rollback",
-        "rolling",
-    ],
-};
 const cardRanks = [
     "wolf's tail",
     "buxom red",
@@ -339,7 +343,8 @@ class playGame extends Phaser.Scene {
 
     playGreeting() {
         this.typewrite(
-            "Hello, drifter! Wanna play catcrawlers?\n[tap to bet 100c.]"
+            "Up for a game o' catcrawlers, outlander?"
+            + " Full six rollback gets the girl!\n[tap to bet 100c.]"
         );
         this.inputAllowed = true;
     }
@@ -423,7 +428,7 @@ class playGame extends Phaser.Scene {
         });
         timeline.play();
         this.typewrite(
-            "Now we are "
+            "Okay, "
             + phrasesMixing[Math.floor(Math.random() * phrasesMixing.length)]
             + " and "
             + phrasesMixing[Math.floor(Math.random() * phrasesMixing.length)]
@@ -433,7 +438,7 @@ class playGame extends Phaser.Scene {
 
     playFishOrRollback() {
         this.firstCardRank = Math.floor(Math.random() * 5) + 1;
-        let firstCardText = cardRanks[this.firstCardRank];
+        const firstCardText = cardRanks[this.firstCardRank];
         this.tweens.add({
             targets: this.cardsInGame.hand[0],
             duration: 500,
@@ -458,11 +463,11 @@ class playGame extends Phaser.Scene {
             ...settings.cardPositions.hand[0],
         });
         this.typewrite(
-            "It is the "
+            "And we got a "
             + firstCardText
-            + "! Do you fish with the "
+            + "! Fishing with the "
             + firstCardText
-            + " or rollback?"
+            + " or rolling back, traveller?"
         );
     }
 
@@ -533,23 +538,33 @@ class playGame extends Phaser.Scene {
             ...settings.cardPositions.deckUnfolded[0],
         });
         timeline.play();
-        let phrases = (
-            this.playersChoice == 1
-            ? phrasesShuffle6.fish
-            : phrasesShuffle6.rollback
-        );
-        this.typewrite(
-            phrases[0]
-            + " it is! Now we are "
-            + phrasesMixing[Math.floor(Math.random() * phrasesMixing.length)]
-            + ", "
-            + phrasesMixing[Math.floor(Math.random() * phrasesMixing.length)]
-            + ", "
-            + phrases[1]
-            + ", "
-            + phrases[1]
-            + "... Now pick a card!"
-        );
+        const firstCardText = cardRanks[this.firstCardRank];
+        if (this.playersChoice == 1) {
+            this.typewrite(
+                "Okay, pulling out! And we're fishing with the "
+                + firstCardText
+                + ", "
+                + phrasesMixing[
+                    Math.floor(Math.random() * phrasesMixing.length)
+                ]
+                + " and "
+                + phrasesMixing[
+                    Math.floor(Math.random() * phrasesMixing.length)
+                ]
+                + "... Now pick a card!"
+            );
+        }
+        else {
+            this.typewrite(
+                "Okay, "
+                + phrasesMixing[
+                    Math.floor(Math.random() * phrasesMixing.length)
+                ]
+                + "! Cats in the house! And we're rolling back with the "
+                + firstCardText
+                + "! Rolling, rolling... Now pick a card!"
+            );
+        }
     }
 
     playRepeat() {
@@ -559,24 +574,39 @@ class playGame extends Phaser.Scene {
         );
         const secondCardText = cardRanks[secondCardRank];
         let winAmount = 0;
-        let winText = "dry out.";
-        let playAgainText = "Wanna play again?\n[Tap to bet 100c.]";
+        let winText = "dryout";
+        let playAgainText = (
+            "! Bad luck, roamer. Chance at a catback and play again?"
+            + "\n[Tap to bet 100c.]"
+        );
         if (
             secondCardRank - this.firstCardRank == this.playersChoice
             && (secondCardRank - 3) ** 2 == 9
         ) {
             winAmount = 600;
-            winText = "get a full six!";
+            winText = "full six";
+            playAgainText = (
+                "! Holy crap! Close stroke gets the girl! 600 Cats!"
+                + " Going for a hot chain, outlander? Play again?"
+                + "\n[Tap to bet 100c.]"
+            );
         }
         else if (
             (secondCardRank - this.firstCardRank) * this.playersChoice > 0
         ) {
             winAmount = 200;
-            winText = "lick it!";
+            winText = "clean lick";
+            playAgainText = (
+                "! 200 Cats, congratulations, drifter... Playing again?"
+                + "\n[Tap to bet 100c.]"
+            );
         }
         this.score += winAmount;
         if (this.score < 100) {
-            playAgainText = "Sorry, you lost all your cats. Next player!";
+            playAgainText = (
+                "! Bad luck, roamer. Come back when you have more cats."
+                + "\nNext player!"
+            );
             this.stage = Stage.GameOver;
         }
         this.tweens.add({
@@ -592,17 +622,19 @@ class playGame extends Phaser.Scene {
             ...settings.cardPositions.hand[1],
         });
         this.typewrite(
-            "It is the "
-            + secondCardText
-            + "! You "
+            "And it's a "
             + winText
-            + " "
+            + " with a "
+            + secondCardText
             + playAgainText
         );
     }
 
     playGameOver() {
-        this.typewrite("Next player!");
+        this.typewrite(
+            "You have nothing left to bet. Come back when you have more cats."
+            + "\nNext player!\n[Refresh the page to reset the game]"
+        );
         this.inputAllowed = true;
     }
 
