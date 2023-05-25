@@ -106,35 +106,60 @@ const settings = {
                 fontFamily: "Courier",
                 fontSize: "72px",
                 fontStyle: "bold",
-                color: "black",
-                backgroundColor: "#999933",
+                color: "#110",
+                backgroundColor: "#aa3",
                 align: "center",
             },
         },
         speechBubble: {
-            x: 100,
-            y: 100,
+            x: 360,
+            y: 60,
             style: {
                 fontFamily: "Arial",
-                fontSize: "72px",
+                fontSize: "48px",
                 fontStyle: "bold",
-                color: "black",
-                backgroundColor: "#aaaaaa44",
-                wordWrap: {width: 880},
+                color: "#110",
+                backgroundColor: "#ffa4",
+                wordWrap: {width: 660},
             },
         },
         scoreDisplay: {
-            x: 1080,
+            x: 0,
             y: 0,
             style: {
                 fontFamily: "Courier",
-                fontSize: "48px",
+                fontSize: "72px",
                 fontStyle: "bold",
-                color: "black",
-                backgroundColor: "#aaaaaa44",
-                align: "right",
+                color: "#110",
+                backgroundColor: "#ffa4",
+                align: "left",
             },
         },
+        scoreUp: {
+            style: {
+                fontFamily: "Courier",
+                fontSize: "72px",
+                fontStyle: "bold",
+                color: "#0f0",
+                backgroundColor: "#0f00",
+                align: "left",
+            },
+        },
+        scoreDown: {
+            style: {
+                fontFamily: "Courier",
+                fontSize: "72px",
+                fontStyle: "bold",
+                color: "#f00",
+                backgroundColor: "#f000",
+                align: "left",
+            },
+        },
+    },
+    coinIcon: {
+        x: 215,
+        y: 40,
+        scale: 0.9,
     },
 };
 const phrasesMixing = [
@@ -207,6 +232,7 @@ class playGame extends Phaser.Scene {
         console.debug("Loading assets");
         this.load.spritesheet("cards", "cards.png", settings.spriteFrame);
         this.load.image("background", "background.jpg");
+        this.load.image("coin", "favicon.ico");
         console.debug("Loaded assets");
     }
 
@@ -240,11 +266,17 @@ class playGame extends Phaser.Scene {
         this.scoreDisplay = this.add.text(
             settings.text.scoreDisplay.x,
             settings.text.scoreDisplay.y,
-            this.score.toString() + "c.",
+            " " + this.score.toString() + "  ",
             settings.text.scoreDisplay.style,
         );
         this.scoreDisplay.setDepth(100);
-        this.scoreDisplay.setOrigin(1, 0);
+        this.coinIcon = this.add.image(
+            settings.coinIcon.x,
+            settings.coinIcon.y,
+            "coin",
+        );
+        this.coinIcon.setDepth(110);
+        this.coinIcon.setScale(settings.coinIcon.scale);
         this.playStage();
         this.input.on("pointerup", this.handleInput, this);
         console.debug("Created game field");
@@ -350,8 +382,7 @@ class playGame extends Phaser.Scene {
     }
 
     playShuffle5() {
-        this.score -= 100;
-        this.updateScoreDisplay();
+        this.updateScore(-100);
         let timeline = this.tweens.chain({
             onComplete: () => {this.inputAllowed = true;},
             ease: "Cubic.easeOut",
@@ -601,8 +632,7 @@ class playGame extends Phaser.Scene {
                 + "\n[Tap to bet 100c.]"
             );
         }
-        this.score += winAmount;
-        if (this.score < 100) {
+        if (this.score + winAmount < 100) {
             playAgainText = (
                 "! Bad luck, roamer. Come back when you have more cats."
                 + "\nNext player!"
@@ -615,7 +645,7 @@ class playGame extends Phaser.Scene {
             onComplete: () => {
                 this.cardsInGame.hand[1].setFrame(secondCardRank);
                 this.cardsInGame.hand[1].setDepth(50);
-                this.updateScoreDisplay();
+                this.updateScore(winAmount);
                 this.inputAllowed = true;
             },
             ease: "Cubic.easeOut",
@@ -638,8 +668,45 @@ class playGame extends Phaser.Scene {
         this.inputAllowed = true;
     }
 
-    updateScoreDisplay() {
-        this.scoreDisplay.text = this.score.toString() + "c.";
+    updateScore(amount) {
+        if (amount == 0) {
+            return;
+        }
+        this.score += amount;
+        let scoreText = this.score.toString();
+        for (let i = 2; i < 5; i++) {
+            if (scoreText.length < i) {
+                scoreText = " " + scoreText;
+            }
+        }
+        scoreText += "  ";
+        let amountText = amount.toString();
+        let style = null;
+        if (amount >= 0) {
+            style = settings.text.scoreUp.style;
+            amountText = "+" + amountText;
+        }
+        else {
+            style = settings.text.scoreDown.style;
+        }
+        let floatingText = this.add.text(
+            settings.text.scoreDisplay.x,
+            settings.text.scoreDisplay.y,
+            amountText,
+            style,
+        );
+        floatingText.setDepth(90);
+        this.tweens.add({
+            targets: floatingText,
+            duration: 1000,
+            y: settings.text.scoreDisplay.y + 150,
+            onStart: () => {
+                this.scoreDisplay.text = scoreText;
+            },
+            onComplete: () => {
+                floatingText.destroy();
+            },
+        });
     }
 
     resetSpeechBubble() {
