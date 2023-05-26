@@ -60,15 +60,15 @@ const settings = {
         hand: [
             {
                 x: 920,
-                y: 900,
+                y: 880,
                 angle: 0,
-                scale: 0.7,
+                scale: 1,
             },
             {
                 x: 600,
-                y: 900,
+                y: 880,
                 angle: 0,
-                scale: 0.7,
+                scale: 1,
             },
         ],
         stash: [
@@ -88,8 +88,8 @@ const settings = {
     },
     resolution: 1080,
     spriteFrame: {
-        frameWidth: 334,
-        frameHeight: 440,
+        frameWidth: 270,
+        frameHeight: 384,
     },
     text: {
         buttons: {
