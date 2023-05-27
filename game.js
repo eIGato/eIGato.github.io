@@ -111,6 +111,16 @@ const settings = {
                 align: "center",
             },
         },
+        infoBox: {
+            style: {
+                fontFamily: "Arial",
+                fontSize: "48px",
+                fontStyle: "bold",
+                color: "#110",
+                backgroundColor: "#ffa",
+                wordWrap: {width: 1060},
+            },
+        },
         speechBubble: {
             x: 360,
             y: 60,
@@ -203,7 +213,7 @@ window.onload = function() {
             width: settings.resolution,
             height: settings.resolution,
         },
-        scene: playGame,
+        scene: [mainMenu, playGame, showRules, showCopyright],
     };
     game = new Phaser.Game(gameConfig);
     window.focus();
@@ -211,21 +221,62 @@ window.onload = function() {
 }
 
 
+class mainMenu extends Phaser.Scene {
+    constructor() {
+        super("MainMenu");
+    }
+
+    create() {
+        this.buttons = [];
+        let button = this.add.text(
+            settings.resolution / 2,
+            settings.resolution / 2 - 330,
+            "\n   START   \n",
+            settings.text.buttons.style,
+        )
+        button.setOrigin(0.5, 0.5);
+        button.setInteractive();
+        button.on(
+            "pointerup",
+            () => {this.scene.start("PlayGame");},
+            this,
+        );
+        this.buttons.push(button);
+        button = this.add.text(
+            settings.resolution / 2,
+            settings.resolution / 2,
+            "\n   RULES   \n",
+            settings.text.buttons.style,
+        )
+        button.setOrigin(0.5, 0.5);
+        button.setInteractive();
+        button.on(
+            "pointerup",
+            () => {this.scene.start("ShowRules");},
+            this,
+        );
+        this.buttons.push(button);
+        button = this.add.text(
+            settings.resolution / 2,
+            settings.resolution / 2 + 330,
+            "\n COPYRIGHT \n",
+            settings.text.buttons.style,
+        )
+        button.setOrigin(0.5, 0.5);
+        button.setInteractive();
+        button.on(
+            "pointerup",
+            () => {this.scene.start("ShowCopyright");},
+            this,
+        );
+        this.buttons.push(button);
+    }
+}
+
+
 class playGame extends Phaser.Scene {
     constructor() {
-        console.debug("Constructing game");
         super("PlayGame");
-        this.stage = Stage.Greeting;
-        this.inputAllowed = false;
-        this.cardsInGame = {
-            deck: [],
-            hand: [],
-            stash: [],
-        };
-        this.firstCardRank = 0;
-        this.buttons = [];
-        this.score = 500;
-        console.debug("Constructed game");
     }
 
     preload() {
@@ -238,6 +289,16 @@ class playGame extends Phaser.Scene {
 
     create() {
         console.debug("Creating game field");
+        this.stage = Stage.Greeting;
+        this.inputAllowed = false;
+        this.cardsInGame = {
+            deck: [],
+            hand: [],
+            stash: [],
+        };
+        this.firstCardRank = 0;
+        this.buttons = [];
+        this.score = 500;
         this.background = this.add.image(
             settings.resolution / 2,
             settings.resolution / 2,
@@ -361,6 +422,8 @@ class playGame extends Phaser.Scene {
                 this.stage = Stage.Repeat;
                 break;
             case Stage.GameOver:
+                this.stage = Stage.Greeting;
+                this.scene.start("MainMenu");
                 break;
             default:
                 throw new Error("Unreachable code");
@@ -778,4 +841,77 @@ function aOrAn(text) {
         return "an " + text;
     }
     return "a " + text;
+}
+
+
+class showRules extends Phaser.Scene {
+    constructor() {
+        super("ShowRules");
+    }
+
+    create() {
+        let text = (
+            "1. The first rule of Catcrawlers: Don't try to play Catcrawlers."
+            + " No, you've gotta breathe Catcrawlers, feel it in your bones."
+            + " Don't even attempt to tug those digits"
+            + " 'til you've charged those wedgers,"
+            + " because you sure as hell can't lick a SPADE"
+            + " 'til you've understood the stone die on a spiritual level."
+            + " Yes, the depth of Catcrawlers will be beyond most"
+            + " in these outlands."
+            + "\n2. Serious this time. The goal is to figure out the rules."
+            + " The dealer tries to confuse you and get some easy cats."
+            + " But when you understand the rules,"
+            + " you will start winning more that you lose."
+            + "\n3. If you still want the explanation,"
+            + " it's easy to find on the Internet."
+            + ' Just search "Catcrawlers rules".'
+            + "\n[Tap to return to main menu.]"
+        );
+        let textBox = this.add.text(
+            settings.resolution / 2,
+            settings.resolution / 2,
+            text,
+            settings.text.infoBox.style,
+        )
+        textBox.setOrigin(0.5, 0.5);
+        this.input.on(
+            "pointerup",
+            () => {this.scene.start("MainMenu");},
+            this,
+        );
+    }
+}
+
+
+class showCopyright extends Phaser.Scene {
+    constructor() {
+        super("ShowCopyright");
+    }
+
+    create() {
+        let text = (
+            "This mini-game has been implemented by a Kenshi(TM) fan"
+            + " for non-commercial purposes."
+            + " It is a visualization of a mini-game"
+            + " already existing inside the game of Kenshi (by Lo-Fi Games)."
+            + ' Copyrights for the mini-game title ("Catcrawlers")'
+            + ", the dealer species and dialog belong to Lo-Fi Games."
+            + " The implementation author is not affiliated with Lo-Fi Games."
+            + "\nAuthor: Evgenii Denisov a.k.a. el71Gato."
+            + "\n[Tap to return to main menu.]"
+        );
+        let textBox = this.add.text(
+            settings.resolution / 2,
+            settings.resolution / 2,
+            text,
+            settings.text.infoBox.style,
+        )
+        textBox.setOrigin(0.5, 0.5);
+        this.input.on(
+            "pointerup",
+            () => {this.scene.start("MainMenu");},
+            this,
+        );
+    }
 }
