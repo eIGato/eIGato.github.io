@@ -283,7 +283,7 @@ class playGame extends Phaser.Scene {
         console.debug("Loading assets");
         this.load.spritesheet("cards", "cards.png", settings.spriteFrame);
         this.load.image("background", "background.jpg");
-        this.load.image("coin", "favicon.ico");
+        this.load.image("coin", "/favicon.ico");
         console.debug("Loaded assets");
     }
 
