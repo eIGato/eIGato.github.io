@@ -19,7 +19,39 @@ const settings = {
             angle: 0,
             scale: 0.5,
         },
-        deckUnfolded: [
+        deckUnfolded5: [
+            {
+                x: 219,
+                y: 540,
+                angle: 40,
+                scale: 1,
+            },
+            {
+                x: 369,
+                y: 627,
+                angle: 20,
+                scale: 1,
+            },
+            {
+                x: 540,
+                y: 657,
+                angle: 0,
+                scale: 1,
+            },
+            {
+                x: 711,
+                y: 627,
+                angle: -20,
+                scale: 1,
+            },
+            {
+                x: 861,
+                y: 540,
+                angle: -40,
+                scale: 1,
+            },
+        ],
+        deckUnfolded6: [
             {
                 x: 219,
                 y: 540,
@@ -461,8 +493,18 @@ class playGame extends Phaser.Scene {
             this.cardsInGame.deck.push(card);
             timeline.add({
                 targets: card,
-                duration: 500,
+                duration: 150,
+                scaleX: 0,
+            });
+            timeline.add({
+                targets: card,
+                duration: 150,
                 onStart: () => {card.setFrame(7);},
+                scaleX: settings.cardPositions.hand[0].scale,
+            });
+            timeline.add({
+                targets: card,
+                duration: 500,
                 ...settings.cardPositions.deckDefault,
             });
         }
@@ -473,8 +515,18 @@ class playGame extends Phaser.Scene {
             timeline.add({
                 targets: card,
                 duration: 500,
-                onComplete: () => {card.setFrame(i * 6);},
                 ...settings.cardPositions.stash[i],
+            });
+            timeline.add({
+                targets: card,
+                duration: 150,
+                scaleX: 0,
+            });
+            timeline.add({
+                targets: card,
+                duration: 150,
+                onStart: () => {card.setFrame(i * 6);},
+                scaleX: settings.cardPositions.stash[i].scale,
             });
         }
         timeline.add({
@@ -514,11 +566,11 @@ class playGame extends Phaser.Scene {
                     this.tweens.add({
                         targets: this.cardsInGame.deck[i],
                         duration: 500,
-                        ...settings.cardPositions.deckUnfolded[i],
+                        ...settings.cardPositions.deckUnfolded5[i],
                     });
                 }
             },
-            ...settings.cardPositions.deckUnfolded[0],
+            ...settings.cardPositions.deckUnfolded5[0],
         });
         timeline.play();
         this.typewrite(
@@ -533,29 +585,46 @@ class playGame extends Phaser.Scene {
     playFishOrRollback() {
         this.firstCardRank = Math.floor(Math.random() * 5) + 1;
         const firstCardText = cardRanks[this.firstCardRank];
-        this.tweens.add({
-            targets: this.cardsInGame.hand[0],
-            duration: 500,
-            onComplete: () => {
-                this.cardsInGame.hand[0].setFrame(this.firstCardRank);
-                this.cardsInGame.hand[0].setDepth(50);
-                for (let i = 0; i < 2; i++) {
-                    let button = this.add.text(
-                        settings.text.buttons.xes[i],
-                        settings.text.buttons.y,
-                        settings.text.buttons.contents[i],
-                        settings.text.buttons.style,
-                    )
-                    this.buttons.push(button);
-                    button.setDepth(120);
-                    button.setOrigin(0.5);
-                    button.setInteractive();
-                }
-                this.inputAllowed = true;
-            },
+        let card = this.cardsInGame.hand[0];
+        let timeline = this.tweens.chain({
+            onComplete: () => {this.inputAllowed = true;},
             ease: "Cubic.easeOut",
-            ...settings.cardPositions.hand[0],
+            paused: true,
+            tweens: [
+                {
+                    targets: card,
+                    duration: 500,
+                    ...settings.cardPositions.hand[0],
+                },
+                {
+                    targets: card,
+                    duration: 150,
+                    onStart: () => {card.setDepth(50);},
+                    scaleX: 0,
+                },
+                {
+                    targets: card,
+                    duration: 150,
+                    onStart: () => {card.setFrame(this.firstCardRank);},
+                    onComplete: () => {
+                        for (let i = 0; i < 2; i++) {
+                            let button = this.add.text(
+                                settings.text.buttons.xes[i],
+                                settings.text.buttons.y,
+                                settings.text.buttons.contents[i],
+                                settings.text.buttons.style,
+                            )
+                            this.buttons.push(button);
+                            button.setDepth(120);
+                            button.setOrigin(0.5);
+                            button.setInteractive();
+                        }
+                    },
+                    scaleX: settings.cardPositions.hand[0].scale,
+                },
+            ],
         });
+        timeline.play();
         this.typewrite(
             "And we got "
             + aOrAn(firstCardText)
@@ -583,8 +652,18 @@ class playGame extends Phaser.Scene {
             this.cardsInGame.deck.push(card);
             timeline.add({
                 targets: card,
-                duration: 500,
+                duration: 150,
+                scaleX: 0,
+            });
+            timeline.add({
+                targets: card,
+                duration: 150,
                 onStart: () => {card.setFrame(7);},
+                scaleX: settings.cardPositions.stash[0].scale,
+            });
+            timeline.add({
+                targets: card,
+                duration: 500,
                 ...settings.cardPositions.deckDefault,
             });
         }
@@ -625,11 +704,11 @@ class playGame extends Phaser.Scene {
                     this.tweens.add({
                         targets: this.cardsInGame.deck[i],
                         duration: 500,
-                        ...settings.cardPositions.deckUnfolded[i],
+                        ...settings.cardPositions.deckUnfolded6[i],
                     });
                 }
             },
-            ...settings.cardPositions.deckUnfolded[0],
+            ...settings.cardPositions.deckUnfolded6[0],
         });
         timeline.play();
         const firstCardText = cardRanks[this.firstCardRank];
@@ -702,18 +781,37 @@ class playGame extends Phaser.Scene {
             );
             this.stage = Stage.GameOver;
         }
-        this.tweens.add({
-            targets: this.cardsInGame.hand[1],
-            duration: 500,
-            onComplete: () => {
-                this.cardsInGame.hand[1].setFrame(secondCardRank);
-                this.cardsInGame.hand[1].setDepth(50);
-                this.updateScore(winAmount);
-                this.inputAllowed = true;
-            },
+        let card = this.cardsInGame.hand[1];
+        let timeline = this.tweens.chain({
+            onComplete: () => {this.inputAllowed = true;},
             ease: "Cubic.easeOut",
-            ...settings.cardPositions.hand[1],
+            paused: true,
+            tweens: [
+                {
+                    targets: card,
+                    duration: 500,
+                    ...settings.cardPositions.hand[1],
+                },
+                {
+                    targets: card,
+                    duration: 150,
+                    scaleX: 0,
+                },
+                {
+                    targets: card,
+                    duration: 150,
+                    onStart: () => {
+                        card.setFrame(secondCardRank);
+                        card.setDepth(50);
+                    },
+                    onComplete: () => {
+                        this.updateScore(winAmount);
+                    },
+                    scaleX: settings.cardPositions.hand[1].scale,
+                },
+            ],
         });
+        timeline.play();
         this.typewrite(
             "And it's "
             + aOrAn(winText)
