@@ -19,7 +19,39 @@ const settings = {
             angle: 0,
             scale: 0.5,
         },
-        deckUnfolded: [
+        deckUnfolded5: [
+            {
+                x: 219,
+                y: 540,
+                angle: 40,
+                scale: 1,
+            },
+            {
+                x: 369,
+                y: 627,
+                angle: 20,
+                scale: 1,
+            },
+            {
+                x: 540,
+                y: 657,
+                angle: 0,
+                scale: 1,
+            },
+            {
+                x: 711,
+                y: 627,
+                angle: -20,
+                scale: 1,
+            },
+            {
+                x: 861,
+                y: 540,
+                angle: -40,
+                scale: 1,
+            },
+        ],
+        deckUnfolded6: [
             {
                 x: 219,
                 y: 540,
@@ -514,11 +546,11 @@ class playGame extends Phaser.Scene {
                     this.tweens.add({
                         targets: this.cardsInGame.deck[i],
                         duration: 500,
-                        ...settings.cardPositions.deckUnfolded[i],
+                        ...settings.cardPositions.deckUnfolded5[i],
                     });
                 }
             },
-            ...settings.cardPositions.deckUnfolded[0],
+            ...settings.cardPositions.deckUnfolded5[0],
         });
         timeline.play();
         this.typewrite(
@@ -625,11 +657,11 @@ class playGame extends Phaser.Scene {
                     this.tweens.add({
                         targets: this.cardsInGame.deck[i],
                         duration: 500,
-                        ...settings.cardPositions.deckUnfolded[i],
+                        ...settings.cardPositions.deckUnfolded6[i],
                     });
                 }
             },
-            ...settings.cardPositions.deckUnfolded[0],
+            ...settings.cardPositions.deckUnfolded6[0],
         });
         timeline.play();
         const firstCardText = cardRanks[this.firstCardRank];
